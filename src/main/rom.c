@@ -56,9 +56,6 @@ static _romdatabase g_romdatabase;
 unsigned char* g_rom = NULL;
 /* Global loaded rom size. */
 int g_rom_size = 0;
-/* Global hacks */
-unsigned char g_alternate_vi_timing = 0;
-int           g_vi_refresh_rate = 1500;
 unsigned char isGoldeneyeRom = 0;
 
 m64p_rom_header   ROM_HEADER;
@@ -179,15 +176,13 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     ROM_PARAMS.vilimit = rom_system_type_to_vi_limit(ROM_PARAMS.systemtype);
     ROM_PARAMS.aidacrate = rom_system_type_to_ai_dac_rate(ROM_PARAMS.systemtype);
     ROM_PARAMS.countperop = COUNT_PER_OP_DEFAULT;
+    ROM_PARAMS.vitiming = ALTERNATE_VI_TIMING_DEFAULT;
+    ROM_PARAMS.virefresh = VI_REFRESH_DEFAULT;
     ROM_PARAMS.cheats = NULL;
 
     memcpy(ROM_PARAMS.headername, ROM_HEADER.Name, 20);
     ROM_PARAMS.headername[20] = '\0';
     trim(ROM_PARAMS.headername); /* Remove trailing whitespace from ROM name. */
-
-    /* set default values for global variables which can be set by the ROM ini */
-    g_alternate_vi_timing = 0;
-    g_vi_refresh_rate = 1500;
     
     /* Look up this ROM in the .ini file and fill in goodname, etc */
     if ((entry=ini_search_by_md5(digest)) != NULL ||
@@ -200,10 +195,9 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.players = entry->players;
         ROM_SETTINGS.rumble = entry->rumble;
         ROM_PARAMS.countperop = entry->countperop;
+        ROM_PARAMS.vitiming = entry->alternate_vi_timing;
+        ROM_PARAMS.virefresh = entry->vi_refresh_rate;
         ROM_PARAMS.cheats = entry->cheats;
-        g_alternate_vi_timing = entry->alternate_vi_timing;
-        if (entry->vi_refresh_rate > 0)
-            g_vi_refresh_rate = entry->vi_refresh_rate;
     }
     else
     {
@@ -214,6 +208,8 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.players = 0;
         ROM_SETTINGS.rumble = 0;
         ROM_PARAMS.countperop = COUNT_PER_OP_DEFAULT;
+        ROM_PARAMS.vitiming = ALTERNATE_VI_TIMING_DEFAULT;
+        ROM_PARAMS.virefresh = VI_REFRESH_DEFAULT;
         ROM_PARAMS.cheats = NULL;
     }
 
@@ -482,6 +478,8 @@ void romdatabase_open(void)
             search->entry.players = DEFAULT;
             search->entry.rumble = DEFAULT; 
             search->entry.countperop = COUNT_PER_OP_DEFAULT;
+            search->entry.alternate_vi_timing = ALTERNATE_VI_TIMING_DEFAULT;
+            search->entry.vi_refresh_rate = VI_REFRESH_DEFAULT;
             search->entry.cheats = NULL;
             search->entry.set_flags = ROMDATABASE_ENTRY_NONE;
 

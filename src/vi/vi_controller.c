@@ -27,7 +27,7 @@
 #include "main/rom.h"
 #include "memory/memory.h"
 #include "plugin/plugin.h"
-#include "r4300/r4300_core.h"
+#include "r4300/r4300.h"
 
 /* XXX: timing hacks */
 enum { DEFAULT_CPU_COUNT_PER_SCANLINE = 1500 };

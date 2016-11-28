@@ -41,8 +41,14 @@ extern unsigned int r4300emu;
 extern uint32_t next_interupt;
 extern uint32_t last_addr;
 #define COUNT_PER_OP_DEFAULT 2
+#define VI_REFRESH_DEFAULT 1500
+#define ALTERNATE_VI_TIMING_DEFAULT 0
 extern unsigned int count_per_op;
 extern cpu_instruction_table current_instruction_table;
+
+/* Global hacks */
+extern int g_alternate_vi_timing;
+extern int g_vi_refresh_rate;
 
 void r4300_reset_hard(void);
 void r4300_reset_soft(void);

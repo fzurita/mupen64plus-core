@@ -256,6 +256,8 @@ int main_set_core_defaults(void)
     ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
     ConfigSetDefaultBool(g_CoreConfig, "DelaySI", 1, "Delay interrupt after DMA SI read/write");
     ConfigSetDefaultInt(g_CoreConfig, "CountPerOp", 0, "Force number of cycles per emulated instruction");
+    ConfigSetDefaultInt(g_CoreConfig, "ViTiming", -1, "Use alternate VI timing (-1=Game default, 0=Don't use alternatr timing, 1=Use alternate timing)");
+    ConfigSetDefaultInt(g_CoreConfig, "ViRefresh", -1, "Modify the default VI refresh rate (-1 or 0=Game default)");
     ConfigSetDefaultBool(g_CoreConfig, "DisableSpecRecomp", 1, "Disable speculative precompilation in new dynarec");
 
     /* handle upgrades */
@@ -885,8 +887,20 @@ m64p_error main_run(void)
     g_delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
     disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
+    g_alternate_vi_timing = ConfigGetParamInt(g_CoreConfig, "ViTiming");
+    g_vi_refresh_rate = ConfigGetParamInt(g_CoreConfig, "ViRefresh");
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
+
+    if (g_alternate_vi_timing < 0)
+        g_alternate_vi_timing = ROM_PARAMS.vitiming;
+
+    if (g_vi_refresh_rate <= 0)
+        g_vi_refresh_rate = ROM_PARAMS.virefresh;
+
+    DebugMessage(M64MSG_STATUS, "VI TIMING=%d", g_alternate_vi_timing);
+    DebugMessage(M64MSG_STATUS, "VI REFRESH=%d", g_vi_refresh_rate);
+
     cheat_add_hacks();
 
     /* do byte-swapping if it's not been done yet */
