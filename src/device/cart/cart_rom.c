@@ -31,7 +31,8 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
-#define CART_ROM_ADDR_MASK UINT32_C(0x03ffffff);
+#define CART_ROM_ADDR_MASK UINT32_C(0x0fffffff);
+#define CART_ROM_MAX_SIZE UINT32_C(251658240);
 
 
 void init_cart_rom(struct cart_rom* cart_rom,
@@ -70,7 +71,7 @@ void read_cart_rom(void* opaque, uint32_t address, uint32_t* value)
 void write_cart_rom(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct cart_rom* cart_rom = (struct cart_rom*)opaque;
-    cart_rom->last_write = value & mask;
+    cart_rom->last_write = ((value & mask)&0xfffffff) % 0xf000000;
     cart_rom->rom_written = 1;
 }
 
@@ -78,7 +79,7 @@ unsigned int cart_rom_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_
 {
     cart_addr &= CART_ROM_ADDR_MASK;
 
-    DebugMessage(M64MSG_WARNING, "DMA Writing to CART_ROM: 0x%" PRIX32 " -> 0x%" PRIX32 " (0x%" PRIX32 ")", dram_addr, cart_addr, length);
+    DebugMessage(M64MSG_ERROR, "DMA Writing to CART_ROM: 0x%" PRIX32 " -> 0x%" PRIX32 " (0x%" PRIX32 ")", dram_addr, cart_addr, length);
 
     return /* length / 8 */0x1000;
 }
@@ -90,6 +91,7 @@ unsigned int cart_rom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr,
     const uint8_t* mem = cart_rom->rom;
 
     cart_addr &= CART_ROM_ADDR_MASK;
+    cart_addr %= 0xf000000;
 
     if (cart_addr + length < cart_rom->rom_size)
     {
