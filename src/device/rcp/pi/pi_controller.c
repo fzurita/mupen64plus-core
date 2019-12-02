@@ -48,12 +48,15 @@ int validate_pi_request(struct pi_controller* pi)
     return 1;
 }
 
+/** static (local) variables **/
+static uint32_t   l_ForceAlignmentOfPiDmaCartMask = ~UINT32_C(1);
+
 static void dma_pi_read(struct pi_controller* pi)
 {
     if (!validate_pi_request(pi))
         return;
 
-    uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG] & ~UINT32_C(1);
+    uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG] & l_ForceAlignmentOfPiDmaCartMask;
     uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG] & 0xffffff;
     uint32_t length = (pi->regs[PI_RD_LEN_REG] & UINT32_C(0x00fffffe)) + 2;
     const uint8_t* dram = (uint8_t*)pi->ri->rdram->dram;
@@ -85,7 +88,7 @@ static void dma_pi_write(struct pi_controller* pi)
     if (!validate_pi_request(pi))
         return;
 
-    uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG] & ~UINT32_C(1);
+    uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG] & l_ForceAlignmentOfPiDmaCartMask;
     uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG] & 0xffffff;
     uint32_t length = (pi->regs[PI_WR_LEN_REG] & UINT32_C(0x00fffffe)) + 2;
     uint8_t* dram = (uint8_t*)pi->ri->rdram->dram;
@@ -119,8 +122,14 @@ void init_pi(struct pi_controller* pi,
              struct dd_controller* dd,
              struct mi_controller* mi,
              struct ri_controller* ri,
-             struct rdp_core* dp)
+             struct rdp_core* dp,
+             int forceAlignmentOfPiDma)
 {
+    if(!forceAlignmentOfPiDma)
+    {
+        l_ForceAlignmentOfPiDmaCartMask = UINT32_C(0xffffffff);
+    }
+
     pi->get_pi_dma_handler = get_pi_dma_handler;
     pi->cart = cart;
     pi->dd = dd;
